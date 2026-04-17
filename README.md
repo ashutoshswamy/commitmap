@@ -1,36 +1,33 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# CommitMap
 
-## Getting Started
+**Curate your code history. A high-fidelity digital archive for repositories.**
 
-First, run the development server:
+CommitMap is a modern, visually stunning web application designed to help developers explore and visualize their Git repository histories with ease. Built with Next.js, it offers an intuitive and responsive interface to uncover insights from your code archives.
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+## 🌟 Features
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+- **Beautiful Visualizations:** See your commit history presented in high fidelity.
+- **Repository Archiving:** Easily search and explore code history.
+- **Responsive Design:** Optimized for both desktop and mobile viewing.
+- **Seamless Integrations:** Explore local and remote repository mappings.
+- **Fast and Performant:** Powered by Next.js, Framer Motion, and the modern web stack.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## 🚀 Live Demo
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+CommitMap is live! Visit the application at: [https://commitmap.ashutoshswamy.in](https://commitmap.ashutoshswamy.in)
 
-## Learn More
+## 🛠️ Tech Stack
 
-To learn more about Next.js, take a look at the following resources:
+- **Framework:** [Next.js](https://nextjs.org/)
+- **Styling:** Tailwind CSS / Custom Variables
+- **Icons:** Lucide React
+- **Animations:** Framer Motion
+- **Fonts:** Geist, JetBrains Mono, Space Grotesk
+- **Deployment:** Vercel
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## 👨‍💻 Developer
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+Developed with ❤️ by **Ashutosh Swamy**.
 
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+- **Portfolio:** [ashutoshswamy.in](https://ashutoshswamy.in)
+- **Email:** Connect via my website.

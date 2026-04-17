@@ -47,10 +47,10 @@ export default async function FilesPage({
   const repoSlug = `${ref.owner}/${ref.repo}`;
   const path = sp.path ?? "";
 
+  let data;
   try {
     const repo = await getRepo(ref);
     const branch = sp.ref ?? repo.default_branch;
-
     const contents = await getContents(ref, path, branch);
     const isDir = Array.isArray(contents);
 
@@ -59,133 +59,33 @@ export default async function FilesPage({
         const d = (DIR_ORDER[a.type] ?? 9) - (DIR_ORDER[b.type] ?? 9);
         return d !== 0 ? d : a.name.localeCompare(b.name);
       });
-
-      return (
-        <>
-          <TopBar repo={repoSlug} branch={branch} branchParam="ref" />
-          <div className="flex flex-1 min-h-0">
-            <Sidebar repoSlug={repoSlug} branch={branch} path={path} />
-            <section className="flex-1 min-w-0 flex flex-col bg-surface-container-lowest">
-              <Breadcrumbs
-                repoSlug={repoSlug}
-                branch={branch}
-                path={path}
-                repoName={repo.name}
-              />
-              <div className="px-6 lg:px-8 pb-8 flex-1 overflow-auto">
-                <div className="rounded-sm overflow-hidden ring-1 ring-outline-variant/15 bg-surface-container-lowest">
-                  <div className="grid grid-cols-1 sm:grid-cols-[1fr_120px_80px] px-4 py-2.5 bg-surface-container text-[10px] font-mono uppercase tracking-[0.22em] text-on-surface-variant/50">
-                    <span>name</span>
-                    <span className="hidden sm:block text-right">type</span>
-                    <span className="hidden sm:block text-right">size</span>
-                  </div>
-                  <ul>
-                    {entries.length === 0 && (
-                      <li className="px-4 py-6 text-center text-xs font-mono text-on-surface-variant/50">
-                        Empty directory.
-                      </li>
-                    )}
-                    {entries.map((e) => (
-                      <DirRow
-                        key={e.sha + e.name}
-                        entry={e}
-                        repoSlug={repoSlug}
-                        branch={branch}
-                      />
-                    ))}
-                  </ul>
-                </div>
-              </div>
-            </section>
-          </div>
-        </>
-      );
-    }
-
-    const entry = contents as ContentEntry;
-    let body: string | null = null;
-    let tooLarge = false;
-    let binary = false;
-
-    if (entry.size > MAX_RENDER_BYTES) {
-      tooLarge = true;
+      data = { repo, branch, entries, isDir: true };
     } else {
-      try {
-        body = await getRawFile(ref, entry.path, branch);
-        if (body.includes("\0")) {
-          binary = true;
-          body = null;
-        }
-      } catch (e) {
-        const err = e as GitHubError;
-        if (err.status === 415 || err.status === 404) {
-          binary = true;
-        } else {
-          throw e;
+      const entry = contents as ContentEntry;
+      let body: string | null = null;
+      let tooLarge = false;
+      let binary = false;
+
+      if (entry.size > MAX_RENDER_BYTES) {
+        tooLarge = true;
+      } else {
+        try {
+          body = await getRawFile(ref, entry.path, branch);
+          if (body.includes("\0")) {
+            binary = true;
+            body = null;
+          }
+        } catch (e) {
+          const err = e as GitHubError;
+          if (err.status === 415 || err.status === 404) {
+            binary = true;
+          } else {
+            throw e;
+          }
         }
       }
+      data = { repo, branch, entry, body, tooLarge, binary, isDir: false };
     }
-
-    const parentPath = entry.path.includes("/")
-      ? entry.path.split("/").slice(0, -1).join("/")
-      : "";
-
-    return (
-      <>
-        <TopBar repo={repoSlug} branch={branch} branchParam="ref" />
-        <div className="flex flex-1 min-h-0">
-          <Sidebar
-            repoSlug={repoSlug}
-            branch={branch}
-            path={parentPath}
-            activeFile={entry.name}
-          />
-          <section className="flex-1 min-w-0 flex flex-col bg-surface-container-lowest">
-            <Breadcrumbs
-              repoSlug={repoSlug}
-              branch={branch}
-              path={entry.path}
-              repoName={repo.name}
-            />
-            <div className="px-6 lg:px-8 pb-8 flex-1 overflow-auto">
-              <div className="rounded-sm overflow-hidden ring-1 ring-outline-variant/15 bg-surface-container-lowest">
-                <div className="px-4 py-2.5 bg-surface-container flex items-center justify-between text-[11px] font-mono border-b border-outline-variant/10">
-                  <div className="flex items-center gap-2">
-                    <LangDot path={entry.path} />
-                    <span className="text-on-surface">{entry.name}</span>
-                  </div>
-                  <div className="flex items-center gap-4 text-on-surface-variant/60">
-                    <span>{formatBytes(entry.size)}</span>
-                    <span>{langFromPath(entry.path)}</span>
-                    {entry.html_url && (
-                      <a
-                        href={entry.html_url}
-                        target="_blank"
-                        rel="noreferrer"
-                        className="hover:text-primary transition-colors"
-                      >
-                        <Icon name="external" size={12} />
-                      </a>
-                    )}
-                  </div>
-                </div>
-
-                {tooLarge ? (
-                  <Notice>
-                    File is {formatBytes(entry.size)} — too large to render
-                    inline.
-                  </Notice>
-                ) : binary || body === null ? (
-                  <Notice>Binary file. Open on GitHub to download.</Notice>
-                ) : (
-                  <CodeView body={body} />
-                )}
-              </div>
-            </div>
-          </section>
-        </div>
-      </>
-    );
   } catch (e) {
     const err = e as GitHubError;
     return (
@@ -199,6 +99,119 @@ export default async function FilesPage({
       </>
     );
   }
+
+  const { repo, branch, isDir } = data;
+
+  if (isDir) {
+    const { entries } = (data as unknown) as { entries: ContentEntry[] };
+    return (
+      <>
+        <TopBar repo={repoSlug} branch={branch} branchParam="ref" />
+        <div className="flex flex-1 min-h-0">
+          <Sidebar repoSlug={repoSlug} branch={branch} path={path} />
+          <section className="flex-1 min-w-0 flex flex-col bg-surface-container-lowest">
+            <Breadcrumbs
+              repoSlug={repoSlug}
+              branch={branch}
+              path={path}
+              repoName={repo.name}
+            />
+            <div className="px-6 lg:px-8 pb-8 flex-1 overflow-auto">
+              <div className="rounded-sm overflow-hidden ring-1 ring-outline-variant/15 bg-surface-container-lowest">
+                <div className="grid grid-cols-1 sm:grid-cols-[1fr_120px_80px] px-4 py-2.5 bg-surface-container text-[10px] font-mono uppercase tracking-[0.22em] text-on-surface-variant/50">
+                  <span>name</span>
+                  <span className="hidden sm:block text-right">type</span>
+                  <span className="hidden sm:block text-right">size</span>
+                </div>
+                <ul>
+                  {entries.length === 0 && (
+                    <li className="px-4 py-6 text-center text-xs font-mono text-on-surface-variant/50">
+                      Empty directory.
+                    </li>
+                  )}
+                  {entries.map((e: ContentEntry) => (
+                    <DirRow
+                      key={e.sha + e.name}
+                      entry={e}
+                      repoSlug={repoSlug}
+                      branch={branch}
+                    />
+                  ))}
+                </ul>
+              </div>
+            </div>
+          </section>
+        </div>
+      </>
+    );
+  }
+
+  const { entry, body, tooLarge, binary } = (data as unknown) as {
+    entry: ContentEntry;
+    body: string | null;
+    tooLarge: boolean;
+    binary: boolean;
+  };
+  const parentPath = entry.path.includes("/")
+    ? entry.path.split("/").slice(0, -1).join("/")
+    : "";
+
+  return (
+    <>
+      <TopBar repo={repoSlug} branch={branch} branchParam="ref" />
+      <div className="flex flex-1 min-h-0">
+        <Sidebar
+          repoSlug={repoSlug}
+          branch={branch}
+          path={parentPath}
+          activeFile={entry.name}
+        />
+        <section className="flex-1 min-w-0 flex flex-col bg-surface-container-lowest">
+          <Breadcrumbs
+            repoSlug={repoSlug}
+            branch={branch}
+            path={entry.path}
+            repoName={repo.name}
+          />
+          <div className="px-6 lg:px-8 pb-8 flex-1 overflow-auto">
+            <div className="rounded-sm overflow-hidden ring-1 ring-outline-variant/15 bg-surface-container-lowest">
+              <div className="px-4 py-2.5 bg-surface-container flex items-center justify-between text-[11px] font-mono border-b border-outline-variant/10">
+                <div className="flex items-center gap-2">
+                  <LangDot path={entry.path} />
+                  <span className="text-on-surface">{entry.name}</span>
+                </div>
+                <div className="flex items-center gap-4 text-on-surface-variant/60">
+                  <span>{formatBytes(entry.size)}</span>
+                  <span>{langFromPath(entry.path)}</span>
+                  {entry.html_url && (
+                    <a
+                      href={entry.html_url}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="hover:text-primary transition-colors"
+                    >
+                      <Icon name="external" size={12} />
+                    </a>
+                  )}
+                </div>
+              </div>
+
+              {tooLarge ? (
+                <Notice>
+                  File is {formatBytes(entry.size)} — too large to render
+                  inline.
+                </Notice>
+              ) : binary || body === null ? (
+                <Notice>Binary file. Open on GitHub to download.</Notice>
+              ) : (
+                <CodeView body={body} />
+              )}
+            </div>
+          </div>
+        </section>
+      </div>
+    </>
+  );
 }
 
 async function Sidebar({

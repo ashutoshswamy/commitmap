@@ -27,7 +27,8 @@ import {
   GitCompare,
   Sparkles,
   Tag,
-  Play
+  Play,
+  LucideIcon,
 } from "lucide-react";
 
 export type IconName =
@@ -60,7 +61,7 @@ export type IconName =
   | "tag"
   | "play";
 
-const iconMap: Record<IconName, any> = {
+const iconMap: Record<IconName, LucideIcon> = {
   timeline: GitCommit,
   branch: GitBranch,
   folder: Folder,
@@ -100,5 +101,5 @@ export function Icon({
 }: IconProps & { name: IconName }) {
   const Comp = iconMap[name];
   if (!Comp) return null;
-  return <Comp size={size} {...(props as any)} />;
+  return <Comp size={size} {...props} />;
 }

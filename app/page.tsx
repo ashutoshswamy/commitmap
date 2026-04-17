@@ -222,7 +222,7 @@ export default function LandingPage() {
               Every commit,<br/>vividly rendered.
             </h2>
             <p className="text-lg text-on-surface-variant/80 font-light leading-relaxed mb-8">
-              Navigate through your repository's history with unprecedented clarity. Our custom rendering engine maps out complex branch topologies into a single, intuitive timeline. Stop guessing who touched what and when.
+              Navigate through your repository&apos;s history with unprecedented clarity. Our custom rendering engine maps out complex branch topologies into a single, intuitive timeline. Stop guessing who touched what and when.
             </p>
           </motion.div>
           <motion.div 

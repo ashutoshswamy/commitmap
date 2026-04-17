@@ -18,20 +18,29 @@ export function StashList() {
 
   const loadStashes = () => {
     const data = JSON.parse(localStorage.getItem("commitmap_stashes") || "[]");
-    setStashes(data.sort((a: StashItem, b: StashItem) => b.timestamp - a.timestamp));
+    setStashes(
+      data.sort((a: StashItem, b: StashItem) => b.timestamp - a.timestamp),
+    );
   };
 
   useEffect(() => {
-    setMounted(true);
-    loadStashes();
+    const t = setTimeout(() => setMounted(true), 0);
+    return () => clearTimeout(t);
+  }, []);
+
+  useEffect(() => {
+    if (mounted) {
+      // Use microtask to avoid synchronous setState warning
+      Promise.resolve().then(() => loadStashes());
+    }
 
     const handleUpdate = () => loadStashes();
     window.addEventListener("stashes_updated", handleUpdate);
     return () => window.removeEventListener("stashes_updated", handleUpdate);
-  }, []);
+  }, [mounted]);
 
   const removeStash = (id: string) => {
-    const filtered = stashes.filter(s => s.id !== id);
+    const filtered = stashes.filter((s) => s.id !== id);
     localStorage.setItem("commitmap_stashes", JSON.stringify(filtered));
     setStashes(filtered);
     window.dispatchEvent(new Event("stashes_updated"));
@@ -40,8 +49,11 @@ export function StashList() {
   if (!mounted) {
     return (
       <div className="animate-pulse space-y-4">
-        {[1, 2, 3].map(i => (
-          <div key={i} className="h-24 bg-surface-container rounded-sm border border-outline-variant/10" />
+        {[1, 2, 3].map((i) => (
+          <div
+            key={i}
+            className="h-24 bg-surface-container rounded-sm border border-outline-variant/10"
+          />
         ))}
       </div>
     );
@@ -53,9 +65,17 @@ export function StashList() {
         <div className="w-16 h-16 rounded-full bg-surface-container mx-auto mb-6 grid place-items-center text-on-surface-variant/30">
           <Icon name="stash" size={24} />
         </div>
-        <h2 className="font-headline font-semibold text-lg text-on-surface mb-2">No stashed items yet</h2>
-        <p className="text-sm text-on-surface-variant/60 max-w-xs mx-auto mb-8">Click the "Stash" button in the top bar of any project to save it here.</p>
-        <Link href="/" className="inline-flex items-center gap-2 px-4 py-2 rounded-sm bg-gradient-primary text-on-primary text-sm font-label shadow-lg shadow-primary/20">
+        <h2 className="font-headline font-semibold text-lg text-on-surface mb-2">
+          No stashed items yet
+        </h2>
+        <p className="text-sm text-on-surface-variant/60 max-w-xs mx-auto mb-8">
+          Click the &quot;Stash&quot; button in the top bar of any project to
+          save it here.
+        </p>
+        <Link
+          href="/"
+          className="inline-flex items-center gap-2 px-4 py-2 rounded-sm bg-gradient-primary text-on-primary text-sm font-label shadow-lg shadow-primary/20"
+        >
           Browse repositories <Icon name="arrow-right" size={14} />
         </Link>
       </div>

@@ -41,6 +41,7 @@ export default async function TimelinePage({
 
   const repoSlug = `${ref.owner}/${ref.repo}`;
 
+  let data;
   try {
     const [repo, branchData] = await Promise.all([
       getRepo(ref),
@@ -55,183 +56,14 @@ export default async function TimelinePage({
       per_page: 25,
     });
 
-    const activeSha = sp.sha && commits.find((c) => c.sha === sp.sha)
-      ? sp.sha
-      : commits[0]?.sha;
+    const activeSha =
+      sp.sha && commits.find((c) => c.sha === sp.sha) ? sp.sha : commits[0]?.sha;
 
     const detail = activeSha
       ? await getCommit(ref, activeSha).catch(() => null)
       : null;
 
-    const lanes = assignLanes(commits);
-
-    return (
-      <>
-        <TopBar repo={repoSlug} branch={activeBranch} />
-        <main className="flex-1 min-h-0 overflow-hidden flex">
-          <section className="flex-1 min-w-0 flex flex-col bg-surface-container-lowest">
-            <div className="px-6 lg:px-8 py-5 flex items-center justify-between gap-4 flex-wrap">
-              <div className="flex items-center gap-3">
-                <BranchSelector
-                  branches={branches}
-                  currentBranch={activeBranch}
-                />
-                <span className="font-mono text-[11px] text-on-surface-variant/60">
-                  {commits.length} commits · {new Set(lanes).size} lanes
-                </span>
-              </div>
-              <Link
-                href={`/diff?repo=${repoSlug}&base=${commits[1]?.sha ?? ""}&head=${commits[0]?.sha ?? ""}`}
-                className="px-3 py-1.5 rounded-sm bg-surface-container text-xs font-label text-on-surface-variant/80 hover:bg-surface-container-high transition-colors flex items-center gap-2"
-              >
-                <Icon name="compare" size={12} /> Compare latest two
-              </Link>
-            </div>
-
-            <div className="flex-1 overflow-auto">
-              <div className="relative px-6 lg:px-8 pt-2 pb-24">
-                <div
-                  className="relative"
-                  style={{ minHeight: commits.length * rowHeight + 40 }}
-                >
-                  <svg
-                    className="absolute top-0 bottom-0 left-0 w-24 lg:w-32 pointer-events-none"
-                    width={120}
-                    height={commits.length * rowHeight + 40}
-                    preserveAspectRatio="none"
-                    aria-hidden
-                  >
-                    <GraphLines lanes={lanes} />
-                  </svg>
-
-                  <ul className="relative flex flex-col" style={{ gap: 0 }}>
-                    {commits.map((c, i) => {
-                      const { subject, body } = parseSubject(
-                        c.commit.message,
-                      );
-                      const lane = lanes[i];
-                      const laneColor =
-                        laneColors[lane % laneColors.length];
-                      const isActive = c.sha === activeSha;
-                      const x = (lane * 16) + 20; // Slightly tighter lanes for better mobile fit
-                      return (
-                        <li
-                          key={c.sha}
-                          className="relative"
-                          style={{ height: rowHeight }}
-                        >
-                          <span
-                            className="absolute z-10"
-                            style={{ left: x - 6, top: rowHeight / 2 - 6 }}
-                          >
-                            <span
-                              className="block w-3 h-3 rounded-full ring-2 ring-background"
-                              style={{
-                                background: laneColor,
-                                boxShadow: isActive
-                                  ? `0 0 14px ${laneColor}`
-                                  : "none",
-                              }}
-                            />
-                          </span>
-
-                          <Link
-                            href={`/timeline?repo=${repoSlug}&sha=${c.sha}`}
-                            scroll={false}
-                            className={`absolute left-24 lg:left-32 right-0 top-1/2 -translate-y-1/2 block rounded-sm transition-all ease-ledger group ${
-                              isActive
-                                ? "bg-surface-container-high ring-1 ring-outline-variant/20 shadow-[0_10px_40px_-16px_rgba(0,0,0,0.8)]"
-                                : "bg-surface-container-low hover:bg-surface-container"
-                            }`}
-                          >
-                            {isActive && (
-                              <span
-                                className="absolute left-0 top-0 bottom-0 w-[2px] rounded-l-sm"
-                                style={{ background: laneColor }}
-                              />
-                            )}
-                            <div className="p-4 lg:p-5">
-                              <div className="flex items-start justify-between gap-4">
-                                <h3
-                                  className={`font-headline leading-tight line-clamp-1 ${
-                                    isActive
-                                      ? "text-lg font-bold text-on-surface"
-                                      : "text-base font-semibold text-on-surface group-hover:text-primary transition-colors"
-                                  }`}
-                                >
-                                  {subject}
-                                </h3>
-                                <span
-                                  className={`shrink-0 font-mono text-[11px] px-2 py-1 rounded-sm ${
-                                    isActive
-                                      ? "text-primary bg-primary/10 ring-1 ring-primary/20"
-                                      : "text-on-surface-variant/70 bg-surface-container"
-                                  }`}
-                                >
-                                  {shortSha(c.sha)}
-                                </span>
-                              </div>
-
-                              {body && isActive && (
-                                <p className="mt-2 text-sm text-on-surface-variant/75 max-w-2xl leading-relaxed line-clamp-2">
-                                  {body}
-                                </p>
-                              )}
-
-                              <div className="mt-3 flex items-center gap-4 text-xs font-label text-on-surface-variant/70 flex-wrap">
-                                <span className="flex items-center gap-2">
-                                  {c.author?.avatar_url ? (
-                                    // eslint-disable-next-line @next/next/no-img-element
-                                    <img
-                                      src={`${c.author.avatar_url}&s=40`}
-                                      alt={c.author.login}
-                                      className="w-5 h-5 rounded-sm object-cover"
-                                    />
-                                  ) : (
-                                    <span className="w-5 h-5 rounded-sm bg-gradient-to-br from-primary/35 to-secondary/20" />
-                                  )}
-                                  <span
-                                    className={
-                                      isActive ? "text-on-surface" : ""
-                                    }
-                                  >
-                                    {c.author?.login ??
-                                      c.commit.author.name}
-                                  </span>
-                                </span>
-                                <span className="text-on-surface-variant/40">
-                                  ·
-                                </span>
-                                <span>
-                                  {relativeTime(c.commit.author.date)}
-                                </span>
-                                {c.parents.length > 1 && (
-                                  <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-sm text-[10px] font-mono text-tertiary bg-tertiary/10 ring-1 ring-tertiary/20">
-                                    <Icon name="branch" size={10} /> merge
-                                  </span>
-                                )}
-                              </div>
-                            </div>
-                          </Link>
-                        </li>
-                      );
-                    })}
-                  </ul>
-                </div>
-              </div>
-            </div>
-          </section>
-
-          <aside className="hidden xl:flex w-[440px] shrink-0 flex-col bg-surface border-l border-outline-variant/10">
-            <DetailPanel
-              commit={detail}
-              fallback={commits.find((c) => c.sha === activeSha)}
-              repoSlug={repoSlug}
-            />
-          </aside>
-        </main>
-      </>
-    );
+    data = { repo, branches, activeBranch, commits, activeSha, detail };
   } catch (e) {
     const err = e as GitHubError;
     return (
@@ -239,12 +71,185 @@ export default async function TimelinePage({
         <TopBar repo={repoSlug} />
         <ErrorState
           code={err.status}
-          title={err.status === 404 ? "Repository not found" : "Failed to load timeline"}
+          title={
+            err.status === 404
+              ? "Repository not found"
+              : "Failed to load timeline"
+          }
           body={err.message || "Unable to load commits."}
         />
       </>
     );
   }
+
+  const {
+    branches,
+    activeBranch,
+    commits,
+    activeSha,
+    detail,
+  } = data;
+  const lanes = assignLanes(commits);
+
+  return (
+    <>
+      <TopBar repo={repoSlug} branch={activeBranch} />
+      <main className="flex-1 min-h-0 overflow-hidden flex">
+        <section className="flex-1 min-w-0 flex flex-col bg-surface-container-lowest">
+          <div className="px-6 lg:px-8 py-5 flex items-center justify-between gap-4 flex-wrap">
+            <div className="flex items-center gap-3">
+              <BranchSelector
+                branches={branches}
+                currentBranch={activeBranch}
+              />
+              <span className="font-mono text-[11px] text-on-surface-variant/60">
+                {commits.length} commits · {new Set(lanes).size} lanes
+              </span>
+            </div>
+            <Link
+              href={`/diff?repo=${repoSlug}&base=${commits[1]?.sha ?? ""}&head=${commits[0]?.sha ?? ""}`}
+              className="px-3 py-1.5 rounded-sm bg-surface-container text-xs font-label text-on-surface-variant/80 hover:bg-surface-container-high transition-colors flex items-center gap-2"
+            >
+              <Icon name="compare" size={12} /> Compare latest two
+            </Link>
+          </div>
+
+          <div className="flex-1 overflow-auto">
+            <div className="relative px-6 lg:px-8 pt-2 pb-24">
+              <div
+                className="relative"
+                style={{ minHeight: commits.length * rowHeight + 40 }}
+              >
+                <svg
+                  className="absolute top-0 bottom-0 left-0 w-24 lg:w-32 pointer-events-none"
+                  width={120}
+                  height={commits.length * rowHeight + 40}
+                  preserveAspectRatio="none"
+                  aria-hidden
+                >
+                  <GraphLines lanes={lanes} />
+                </svg>
+
+                <ul className="relative flex flex-col" style={{ gap: 0 }}>
+                  {commits.map((c, i) => {
+                    const { subject, body } = parseSubject(c.commit.message);
+                    const lane = lanes[i];
+                    const laneColor = laneColors[lane % laneColors.length];
+                    const isActive = c.sha === activeSha;
+                    const x = lane * 16 + 20; // Slightly tighter lanes for better mobile fit
+                    return (
+                      <li
+                        key={c.sha}
+                        className="relative"
+                        style={{ height: rowHeight }}
+                      >
+                        <span
+                          className="absolute z-10"
+                          style={{ left: x - 6, top: rowHeight / 2 - 6 }}
+                        >
+                          <span
+                            className="block w-3 h-3 rounded-full ring-2 ring-background"
+                            style={{
+                              background: laneColor,
+                              boxShadow: isActive
+                                ? `0 0 14px ${laneColor}`
+                                : "none",
+                            }}
+                          />
+                        </span>
+
+                        <Link
+                          href={`/timeline?repo=${repoSlug}&sha=${c.sha}`}
+                          scroll={false}
+                          className={`absolute left-24 lg:left-32 right-0 top-1/2 -translate-y-1/2 block rounded-sm transition-all ease-ledger group ${
+                            isActive
+                              ? "bg-surface-container-high ring-1 ring-outline-variant/20 shadow-[0_10px_40px_-16px_rgba(0,0,0,0.8)]"
+                              : "bg-surface-container-low hover:bg-surface-container"
+                          }`}
+                        >
+                          {isActive && (
+                            <span
+                              className="absolute left-0 top-0 bottom-0 w-[2px] rounded-l-sm"
+                              style={{ background: laneColor }}
+                            />
+                          )}
+                          <div className="p-4 lg:p-5">
+                            <div className="flex items-start justify-between gap-4">
+                              <h3
+                                className={`font-headline leading-tight line-clamp-1 ${
+                                  isActive
+                                    ? "text-lg font-bold text-on-surface"
+                                    : "text-base font-semibold text-on-surface group-hover:text-primary transition-colors"
+                                }`}
+                              >
+                                {subject}
+                              </h3>
+                              <span
+                                className={`shrink-0 font-mono text-[11px] px-2 py-1 rounded-sm ${
+                                  isActive
+                                    ? "text-primary bg-primary/10 ring-1 ring-primary/20"
+                                    : "text-on-surface-variant/70 bg-surface-container"
+                                }`}
+                              >
+                                {shortSha(c.sha)}
+                              </span>
+                            </div>
+
+                            {body && isActive && (
+                              <p className="mt-2 text-sm text-on-surface-variant/75 max-w-2xl leading-relaxed line-clamp-2">
+                                {body}
+                              </p>
+                            )}
+
+                            <div className="mt-3 flex items-center gap-4 text-xs font-label text-on-surface-variant/70 flex-wrap">
+                              <span className="flex items-center gap-2">
+                                {c.author?.avatar_url ? (
+                                  // eslint-disable-next-line @next/next/no-img-element
+                                  <img
+                                    src={`${c.author.avatar_url}&s=40`}
+                                    alt={c.author.login}
+                                    className="w-5 h-5 rounded-sm object-cover"
+                                  />
+                                ) : (
+                                  <span className="w-5 h-5 rounded-sm bg-gradient-to-br from-primary/35 to-secondary/20" />
+                                )}
+                                <span
+                                  className={isActive ? "text-on-surface" : ""}
+                                >
+                                  {c.author?.login ?? c.commit.author.name}
+                                </span>
+                              </span>
+                              <span className="text-on-surface-variant/40">
+                                ·
+                              </span>
+                              <span>{relativeTime(c.commit.author.date)}</span>
+                              {c.parents.length > 1 && (
+                                <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-sm text-[10px] font-mono text-tertiary bg-tertiary/10 ring-1 ring-tertiary/20">
+                                  <Icon name="branch" size={10} /> merge
+                                </span>
+                              )}
+                            </div>
+                          </div>
+                        </Link>
+                      </li>
+                    );
+                  })}
+                </ul>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <aside className="hidden xl:flex w-[440px] shrink-0 flex-col bg-surface border-l border-outline-variant/10">
+          <DetailPanel
+            commit={detail}
+            fallback={commits.find((c) => c.sha === activeSha)}
+            repoSlug={repoSlug}
+          />
+        </aside>
+      </main>
+    </>
+  );
 }
 
 function assignLanes(commits: Commit[]): number[] {

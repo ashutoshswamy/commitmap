@@ -1,4 +1,3 @@
-import { Icon } from "./Icon";
 import { BranchSelector } from "./BranchSelector";
 import { getBranches, parseRepoInput } from "../lib/github";
 import { StashButton } from "./StashButton";
@@ -22,7 +21,9 @@ export async function TopBar({
       try {
         const bd = await getBranches(ref);
         fetchedBranches = bd.map((b) => b.name);
-      } catch (e) {}
+      } catch {
+        // Ignore error
+      }
     }
   }
   return (

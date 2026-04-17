@@ -4,6 +4,13 @@ import { useState, useEffect } from "react";
 import { useSearchParams } from "next/navigation";
 import { Icon } from "./Icon";
 
+interface StashItem {
+  id: string;
+  repo: string;
+  timestamp: number;
+  label: string;
+}
+
 export function StashButton() {
   const searchParams = useSearchParams();
   const repo = searchParams.get("repo");
@@ -11,31 +18,43 @@ export function StashButton() {
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
-    setMounted(true);
-    if (!repo) return;
-    
-    const stashes = JSON.parse(localStorage.getItem("commitmap_stashes") || "[]");
-    setStashed(stashes.some((s: any) => s.repo === repo));
-  }, [repo]);
+    const t = setTimeout(() => setMounted(true), 0);
+    return () => clearTimeout(t);
+  }, []);
+
+  useEffect(() => {
+    if (!mounted || !repo) return;
+
+    const data = localStorage.getItem("commitmap_stashes");
+    const stashes: StashItem[] = data ? JSON.parse(data) : [];
+    // Use microtask to avoid synchronous setState warning
+    Promise.resolve().then(() => {
+      setStashed(stashes.some((s) => s.repo === repo));
+    });
+  }, [mounted, repo]);
 
   const toggleStash = () => {
     if (!repo) return;
-    
-    const stashes = JSON.parse(localStorage.getItem("commitmap_stashes") || "[]");
-    const isStashed = stashes.some((s: any) => s.repo === repo);
-    
+
+    const data = localStorage.getItem("commitmap_stashes");
+    const stashes: StashItem[] = data ? JSON.parse(data) : [];
+    const isStashed = stashes.some((s) => s.repo === repo);
+
     if (isStashed) {
-      const filtered = stashes.filter((s: any) => s.repo !== repo);
+      const filtered = stashes.filter((s) => s.repo !== repo);
       localStorage.setItem("commitmap_stashes", JSON.stringify(filtered));
       setStashed(false);
     } else {
-      const newItem = {
+      const newItem: StashItem = {
         id: crypto.randomUUID(),
         repo,
         timestamp: Date.now(),
-        label: repo.split("/")[1] || repo
+        label: repo.split("/")[1] || repo,
       };
-      localStorage.setItem("commitmap_stashes", JSON.stringify([...stashes, newItem]));
+      localStorage.setItem(
+        "commitmap_stashes",
+        JSON.stringify([...stashes, newItem]),
+      );
       setStashed(true);
     }
     

@@ -2,6 +2,7 @@ import { Icon } from "./Icon";
 import { BranchSelector } from "./BranchSelector";
 import { getBranches, parseRepoInput } from "../lib/github";
 import { StashButton } from "./StashButton";
+import { Suspense } from "react";
 
 export async function TopBar({
   repo,
@@ -36,12 +37,14 @@ export async function TopBar({
           {branch && (
             <div className="ml-1 sm:ml-2 inline-block shrink-0">
               {fetchedBranches && fetchedBranches.length > 0 ? (
-                <BranchSelector
-                  branches={fetchedBranches}
-                  currentBranch={branch}
-                  paramName={branchParam}
-                  compact={true}
-                />
+                <Suspense fallback={<div className="w-24 h-6 animate-pulse bg-secondary/10 rounded-sm" />}>
+                  <BranchSelector
+                    branches={fetchedBranches}
+                    currentBranch={branch}
+                    paramName={branchParam}
+                    compact={true}
+                  />
+                </Suspense>
               ) : (
                 <span className="px-1.5 py-0.5 rounded-sm text-[10px] bg-secondary/10 text-secondary ring-1 ring-secondary/20 uppercase font-mono tracking-[0.05em]">
                   {branch}
@@ -53,7 +56,9 @@ export async function TopBar({
       </div>
 
       <div className="flex items-center gap-3">
-        <StashButton />
+        <Suspense fallback={<div className="w-16 h-8 animate-pulse bg-surface-container rounded-sm" />}>
+          <StashButton />
+        </Suspense>
       </div>
     </header>
   );

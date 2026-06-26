@@ -31,3 +31,8 @@ Developed with ❤️ by **Ashutosh Swamy**.
 
 - **Portfolio:** [ashutoshswamy.in](https://ashutoshswamy.in)
 - **Email:** Connect via my website.
+
+## 📄 License
+
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+

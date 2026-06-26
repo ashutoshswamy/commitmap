@@ -15,8 +15,22 @@ import {
   listCommits,
   parseSubject,
 } from "../../lib/github";
+import type { Metadata } from "next";
 
 type SP = { repo?: string; branch?: string };
+
+export async function generateMetadata({
+  searchParams,
+}: {
+  searchParams: Promise<SP>;
+}): Promise<Metadata> {
+  const sp = await searchParams;
+  const repo = sp.repo || "";
+  return {
+    title: repo ? `Dashboard | ${repo}` : "Dashboard",
+    description: repo ? `View Git repository statistics, languages, contributors, and commit activity for ${repo} on CommitMap.` : "View Git repository statistics, languages, contributors, and commit activity on CommitMap.",
+  };
+}
 
 export default async function DashboardPage({
   searchParams,

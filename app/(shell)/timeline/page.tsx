@@ -16,8 +16,24 @@ import {
   type Commit,
   type CommitFile,
 } from "../../lib/github";
+import type { Metadata } from "next";
 
 type SP = { repo?: string; sha?: string; branch?: string };
+
+export async function generateMetadata({
+  searchParams,
+}: {
+  searchParams: Promise<SP>;
+}): Promise<Metadata> {
+  const sp = await searchParams;
+  const repo = sp.repo || "";
+  const branch = sp.branch || "";
+  const branchText = branch ? ` (${branch})` : "";
+  return {
+    title: repo ? `Timeline${branchText} | ${repo}` : "Timeline",
+    description: repo ? `Explore Git commit timeline, branch graph, and development history for ${repo} on CommitMap.` : "Explore Git commit timeline, branch graph, and development history on CommitMap.",
+  };
+}
 
 const rowHeight = 110;
 const laneColors = ["#ddb8ff", "#44e2cd", "#ffb2b9", "#a74bfe", "#62fae3"];
@@ -94,6 +110,7 @@ export default async function TimelinePage({
   return (
     <>
       <TopBar repo={repoSlug} branch={activeBranch} />
+      <h1 className="sr-only">Git Commit Timeline — {repoSlug}</h1>
       <main className="flex-1 min-h-0 overflow-hidden flex">
         <section className="flex-1 min-w-0 flex flex-col bg-surface-container-lowest">
           <div className="px-6 lg:px-8 py-5 flex items-center justify-between gap-4 flex-wrap">

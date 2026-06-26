@@ -12,8 +12,24 @@ import {
   type ContentEntry,
 } from "../../lib/github";
 import { errorTitle, langFromPath } from "../../lib/diff";
+import type { Metadata } from "next";
 
 type SP = { repo?: string; path?: string; ref?: string };
+
+export async function generateMetadata({
+  searchParams,
+}: {
+  searchParams: Promise<SP>;
+}): Promise<Metadata> {
+  const sp = await searchParams;
+  const repo = sp.repo || "";
+  const path = sp.path || "";
+  const pathText = path ? ` (${path})` : "";
+  return {
+    title: repo ? `Files${pathText} | ${repo}` : "Files",
+    description: repo ? `Browse the directory tree and view source code for ${repo} on CommitMap.` : "Browse the directory tree and view source code on CommitMap.",
+  };
+}
 
 const DIR_ORDER: Record<string, number> = {
   dir: 0,
@@ -107,6 +123,7 @@ export default async function FilesPage({
     return (
       <>
         <TopBar repo={repoSlug} branch={branch} branchParam="ref" />
+        <h1 className="sr-only">File Browser — {repoSlug}</h1>
         <div className="flex flex-1 min-h-0">
           <Sidebar repoSlug={repoSlug} branch={branch} path={path} />
           <section className="flex-1 min-w-0 flex flex-col bg-surface-container-lowest">
@@ -159,6 +176,7 @@ export default async function FilesPage({
   return (
     <>
       <TopBar repo={repoSlug} branch={branch} branchParam="ref" />
+      <h1 className="sr-only">File Viewer — {entry.name} in {repoSlug}</h1>
       <div className="flex flex-1 min-h-0">
         <Sidebar
           repoSlug={repoSlug}

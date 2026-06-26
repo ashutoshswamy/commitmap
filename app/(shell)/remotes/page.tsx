@@ -9,8 +9,22 @@ import {
 } from "../../lib/github";
 import Link from "next/link";
 import { Icon } from "../../components/Icon";
+import type { Metadata } from "next";
 
 type SP = { repo?: string };
+
+export async function generateMetadata({
+  searchParams,
+}: {
+  searchParams: Promise<SP>;
+}): Promise<Metadata> {
+  const sp = await searchParams;
+  const repo = sp.repo || "";
+  return {
+    title: repo ? `Remotes & Forks | ${repo}` : "Remotes & Forks",
+    description: repo ? `Explore GitHub forks, remotes, and network information for repository ${repo} on CommitMap.` : "Explore GitHub forks, remotes, and network information on CommitMap.",
+  };
+}
 
 export default async function RemotesPage({
   searchParams,

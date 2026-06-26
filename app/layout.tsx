@@ -38,6 +38,16 @@ export const metadata: Metadata = {
     "developer tools",
   ],
   authors: [{ name: "CommitMap" }],
+  icons: {
+    icon: [
+      { url: "/favicon.ico", sizes: "any" },
+      { url: "/favicon-32x32.png", sizes: "32x32", type: "image/png" },
+      { url: "/favicon-16x16.png", sizes: "16x16", type: "image/png" },
+    ],
+    apple: [
+      { url: "/apple-touch-icon.png", sizes: "180x180", type: "image/png" },
+    ],
+  },
   openGraph: {
     title: "CommitMap — Git Visualizer",
     description: "Curate your code history. A high-fidelity digital archive for repositories.",
@@ -45,11 +55,20 @@ export const metadata: Metadata = {
     siteName: "CommitMap",
     locale: "en_US",
     type: "website",
+    images: [
+      {
+        url: "/og-image.jpg",
+        width: 1200,
+        height: 675,
+        alt: "CommitMap — The Git Visualizer Dashboard Preview",
+      },
+    ],
   },
   twitter: {
     card: "summary_large_image",
     title: "CommitMap — Git Visualizer",
     description: "Curate your code history. A high-fidelity digital archive for repositories.",
+    images: ["/og-image.jpg"],
   },
   robots: {
     index: true,

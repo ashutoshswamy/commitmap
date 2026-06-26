@@ -4,8 +4,22 @@ import { getBranches, parseRepoInput } from "../../lib/github";
 import Link from "next/link";
 import { Icon } from "../../components/Icon";
 import { Suspense } from "react";
+import type { Metadata } from "next";
 
 type SP = { repo?: string };
+
+export async function generateMetadata({
+  searchParams,
+}: {
+  searchParams: Promise<SP>;
+}): Promise<Metadata> {
+  const sp = await searchParams;
+  const repo = sp.repo || "";
+  return {
+    title: repo ? `Branches | ${repo}` : "Branches",
+    description: repo ? `Explore Git branches for the repository ${repo} on CommitMap.` : "Explore Git branches on CommitMap.",
+  };
+}
 
 export default async function BranchesPage({
   searchParams,

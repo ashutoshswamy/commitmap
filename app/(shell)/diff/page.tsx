@@ -15,8 +15,25 @@ import {
   type CompareResult,
 } from "../../lib/github";
 import { errorTitle, fileStatusTint, parsePatch } from "../../lib/diff";
+import type { Metadata } from "next";
 
 type SP = { repo?: string; base?: string; head?: string; file?: string };
+
+export async function generateMetadata({
+  searchParams,
+}: {
+  searchParams: Promise<SP>;
+}): Promise<Metadata> {
+  const sp = await searchParams;
+  const repo = sp.repo || "";
+  const base = sp.base || "";
+  const head = sp.head || "";
+  const compareText = base && head ? ` (${base}...${head})` : "";
+  return {
+    title: repo ? `Compare / Diff${compareText} | ${repo}` : "Compare / Diff",
+    description: repo ? `Compare commits and view code diffs for ${repo} on CommitMap.` : "Compare commits and view code diffs on CommitMap.",
+  };
+}
 
 export default async function DiffPage({
   searchParams,

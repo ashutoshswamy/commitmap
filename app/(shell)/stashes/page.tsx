@@ -1,8 +1,22 @@
 import { TopBar } from "../../components/TopBar";
 import { StashList } from "../../components/StashList";
 import { parseRepoInput } from "../../lib/github";
+import type { Metadata } from "next";
 
 type SP = { repo?: string };
+
+export async function generateMetadata({
+  searchParams,
+}: {
+  searchParams: Promise<SP>;
+}): Promise<Metadata> {
+  const sp = await searchParams;
+  const repo = sp.repo || "";
+  return {
+    title: repo ? `Stashes | ${repo}` : "Stashes",
+    description: repo ? `View bookmarked repositories and saved views for ${repo} on CommitMap.` : "View bookmarked repositories and saved views on CommitMap.",
+  };
+}
 
 export default async function StashesPage({
   searchParams,
